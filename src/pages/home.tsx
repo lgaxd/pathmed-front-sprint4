@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar } from "../components/sidebar";
 import { Overlay } from "../components/overlay";
 import { Header } from "../components/header";
 import { RenderAgendamentos } from "../components/render-agendamentos";
+import { ApiSelector } from "../components/api-selector";
 import { useNavigate } from "react-router-dom";
 
 export function Home() {
@@ -16,19 +17,16 @@ export function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Overlay visible={sidebarOpen} onClick={() => setSidebarOpen(false)} />
       <Header onMenuClick={() => setSidebarOpen(true)} onLogout={handleLogout} />
 
-      {/* Main */}
       <main className="p-6">
+        <ApiSelector />
         <div className="text-lg mb-4">
           Olá, <b>Nelson</b>!
         </div>
-
         <RenderAgendamentos />
-        
       </main>
     </div>
   );

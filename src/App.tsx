@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ErrorFallback } from "./components/error-fallback";
 import { ErrorBoundary } from "react-error-boundary";
 import { Loading } from "./components/loading";
+import { ApiProvider } from "./contexts/api-context";
 
 const Home = lazy(() =>
   import("./pages/home").then((module) => ({
@@ -73,6 +74,7 @@ const Consultas = lazy(() =>
 function App() {
 
   return (
+    <ApiProvider>
     <BrowserRouter>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <Suspense fallback={<Loading />}>
@@ -92,6 +94,7 @@ function App() {
         </Suspense>
       </ErrorBoundary>
     </BrowserRouter>
+    </ApiProvider>
   )
 }
 
