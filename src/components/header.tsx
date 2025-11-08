@@ -12,10 +12,19 @@ export function Header({ onMenuClick }: HeaderProps) {
     const navigate = useNavigate();
 
     const handleLogout = () => {
+        // Limpar todos os dados de autenticação
         localStorage.removeItem('userToken');
         localStorage.removeItem('userId');
-        navigate('/login');
+        sessionStorage.clear();
+        
+        // Fechar dropdown
         setProfileOpen(false);
+        
+        // Forçar recarregamento completo
+        setTimeout(() => {
+            window.location.href = '/login';
+            window.location.reload();
+        }, 100);
     };
 
     const handleHomeClick = () => {

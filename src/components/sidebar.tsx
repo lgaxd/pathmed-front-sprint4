@@ -15,6 +15,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   const menuItems: MenuItem[] = [
     { label: "Painel principal", path: "/" },
+    { label: "Agendar Consulta", path: "/agendar-consulta" },
     { label: "Lembretes", path: "/lembretes" },
     { label: "Consultas", path: "/consultas" },
     { label: "Perfil", path: "/perfil" },

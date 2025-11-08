@@ -71,15 +71,33 @@ const Consultas = lazy(() =>
   }))
 );
 
+const AgendarConsulta = lazy(() =>
+  import("./pages/agendar-consulta").then((module) => ({
+    default: module.AgendarConsulta,
+  }))
+);
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('userToken')
-    setIsAuthenticated(!!token)
-    setLoading(false)
-  }, [])
+    checkAuthentication();
+
+    // Listener para mudanças no localStorage
+    const handleStorageChange = () => {
+      checkAuthentication();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const checkAuthentication = () => {
+    const token = localStorage.getItem('userToken');
+    setIsAuthenticated(!!token);
+    setLoading(false);
+  };
 
   if (loading) {
     return <Loading />
@@ -142,6 +160,10 @@ function App() {
               <Route
                 path="*"
                 element={isAuthenticated ? <NotFound /> : <Navigate to="/login" />}
+              />
+              <Route
+                path="/agendar-consulta"
+                element={isAuthenticated ? <AgendarConsulta /> : <Navigate to="/login" />}
               />
             </Routes>
           </Suspense>
