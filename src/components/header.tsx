@@ -1,18 +1,29 @@
 import { useState } from "react";
 import iconeUsuario from "../assets/imgs/utils/icone-usuario.png";
 import icone80anos from "../assets/imgs/logos/logo-80anos.png";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
     onMenuClick: () => void;
-    onLogout?: () => void;
 }
 
-export function Header({ onMenuClick, onLogout }: HeaderProps) {
+export function Header({ onMenuClick }: HeaderProps) {
     const [profileOpen, setProfileOpen] = useState(false);
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem('userToken');
+        localStorage.removeItem('userId');
+        navigate('/login');
+        setProfileOpen(false);
+    };
+
+    const handleHomeClick = () => {
+        navigate('/');
+    };
 
     return (
         <header className="flex items-center justify-between px-4 py-3 bg-blue-500 text-white shadow relative z-20">
-            {/* Botão de menu (abre sidebar) */}
             <button
                 className="text-2xl cursor-pointer"
                 onClick={onMenuClick}
@@ -21,17 +32,15 @@ export function Header({ onMenuClick, onLogout }: HeaderProps) {
                 ☰
             </button>
 
-            {/* Botão com imagem da logotipo, que encaminha à página Home usando navigate. */}
             <div className="flex-grow text-center">
                 <img
                     src={icone80anos}
                     alt="Logotipo"
                     className="h-8 mx-auto cursor-pointer"
-                    onClick={() => window.location.href = '/'}
+                    onClick={handleHomeClick}
                 />
             </div>
 
-            {/* Avatar / Dropdown */}
             <div className="relative">
                 <button
                     className="cursor-pointer"
@@ -47,11 +56,11 @@ export function Header({ onMenuClick, onLogout }: HeaderProps) {
                 </button>
 
                 {profileOpen && (
-                    <ul className="absolute right-0 mt-2 w-32 bg-white text-gray-700 rounded-lg shadow-lg">
+                    <ul className="absolute right-0 mt-2 w-32 bg-white text-gray-700 rounded-lg shadow-lg z-50">
                         <li>
                             <button
                                 className="w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                onClick={onLogout}
+                                onClick={handleLogout}
                             >
                                 Sair
                             </button>

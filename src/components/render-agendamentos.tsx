@@ -1,4 +1,3 @@
-// src/components/render-agendamentos.tsx
 import { ListaAgendamentos } from "./lista-agendamentos";
 import type { Agendamento } from "../types/agendamento";
 import { useApiService } from "../hooks/usar-api-service";
@@ -44,12 +43,12 @@ export function RenderAgendamentos() {
     })
     .map(consulta => ({
       id: consulta.idConsulta.toString(),
-      rghcPaciente: "123456", // Você precisará obter isso da API de pacientes
-      especialidade: "Consulta", // Obter da API de especialidades
+      rghcPaciente: consulta.idPaciente?.toString() || "123456",
+      especialidade: consulta.especialidade || "Consulta", // Usar dados da API ou fallback
       data: consulta.dataHoraConsulta.split('T')[0],
       horario: consulta.dataHoraConsulta.split('T')[1].substring(0, 5),
       status: getStatusText(consulta.idStatus),
-      medicoNome: "Dr. Médico" // Obter da API de profissionais
+      medicoNome: consulta.medicoNome || "Dr. Médico"
     }));
 
   const agendamentosFuturos: Agendamento[] = consultas
@@ -60,12 +59,12 @@ export function RenderAgendamentos() {
     })
     .map(consulta => ({
       id: consulta.idConsulta.toString(),
-      rghcPaciente: "123456",
-      especialidade: "Consulta",
+      rghcPaciente: consulta.idPaciente?.toString() || "123456",
+      especialidade: consulta.especialidade || "Consulta",
       data: consulta.dataHoraConsulta.split('T')[0],
       horario: consulta.dataHoraConsulta.split('T')[1].substring(0, 5),
       status: getStatusText(consulta.idStatus),
-      medicoNome: "Dr. Médico"
+      medicoNome: consulta.medicoNome || "Dr. Médico"
     }));
 
   return (

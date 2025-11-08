@@ -1,11 +1,9 @@
-import type { Especialidade } from "./especialidade";
-
 export interface Agendamento {
     id: string;
     rghcPaciente: string;
-    especialidade: Especialidade;
-    data: string; // ISO 8601
-    horario: string; // Formato "HH:mm"
+    especialidade: string; // Mudado de tipo específico para string genérica
+    data: string;
+    horario: string;
     status: "Agendado" | "Cancelado" | "Concluído";
     medicoNome: string;
 }

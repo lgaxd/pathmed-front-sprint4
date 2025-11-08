@@ -20,7 +20,7 @@ export function Consultas() {
         <div className="min-h-screen bg-gray-50">
             <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <Overlay visible={sidebarOpen} onClick={() => setSidebarOpen(false)} />
-            <Header onMenuClick={() => setSidebarOpen(true)} onLogout={handleLogout} />
+            <Header onMenuClick={() => setSidebarOpen(true)} />
             <main className="p-6">
                 <div className="text-lg mb-4">
                     Olá, <b>Nelson</b>!

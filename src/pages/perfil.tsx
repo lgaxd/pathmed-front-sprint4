@@ -25,7 +25,7 @@ export function Perfil() {
         <>
             <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <Overlay visible={sidebarOpen} onClick={() => setSidebarOpen(false)} />
-            <Header onMenuClick={() => setSidebarOpen(true)} onLogout={handleLogout} />
+            <Header onMenuClick={() => setSidebarOpen(true)} />
             <PerfilCard
                 nome="Nelson Oliveira Lima"
                 dataNascimento="10/05/1962"

@@ -17,7 +17,7 @@ export function Lembretes() {
             <div>
                 <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
                 <Overlay visible={sidebarOpen} onClick={() => setSidebarOpen(false)} />
-                <Header onMenuClick={() => setSidebarOpen(true)} onLogout={handleLogout} />
+                <Header onMenuClick={() => setSidebarOpen(true)} />
                 {/* Conteúdo da página de lembretes */}
                 <main className="p-6">
                     <div className="text-lg mb-4">

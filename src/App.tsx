@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { ErrorFallback } from "./components/error-fallback";
 import { ErrorBoundary } from "react-error-boundary";
 import { Loading } from "./components/loading";
@@ -72,28 +72,46 @@ const Consultas = lazy(() =>
 );
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const token = localStorage.getItem('userToken')
+    setIsAuthenticated(!!token)
+    setLoading(false)
+  }, [])
+
+  if (loading) {
+    return <Loading />
+  }
 
   return (
     <ApiProvider>
-    <BrowserRouter>
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <Suspense fallback={<Loading />}>
-          <Routes>
-            <Route index element={<Home />} />
-            <Route path="*" element={<NotFound />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/onboarding-consulta" element={<OnboardingConsulta />} />
-            <Route path="/teleconsulta" element={<TeleConsultaEncaminhamento />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
-            <Route path="/assistente-virtual" element={<AssistenteVirtual />} />
-            <Route path="/desenvolvedores" element={<Desenvolvedores />} />
-            <Route path="/perfil" element={<Perfil />} />
-            <Route path="/lembretes" element={<Lembretes />} />
-            <Route path="/consultas" element={<Consultas />} />
-          </Routes>
-        </Suspense>
-      </ErrorBoundary>
-    </BrowserRouter>
+      <BrowserRouter>
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <Suspense fallback={<Loading />}>
+            <Routes>
+              <Route 
+                path="/login" 
+                element={!isAuthenticated ? <Login /> : <Navigate to="/" />} 
+              />
+              <Route 
+                path="/" 
+                element={isAuthenticated ? <Home /> : <Navigate to="/login" />} 
+              />
+              <Route 
+                path="/onboarding-consulta" 
+                element={isAuthenticated ? <OnboardingConsulta /> : <Navigate to="/login" />} 
+              />
+              {/* Proteger todas as outras rotas */}
+              <Route 
+                path="*" 
+                element={isAuthenticated ? <NotFound /> : <Navigate to="/login" />} 
+              />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
+      </BrowserRouter>
     </ApiProvider>
   )
 }

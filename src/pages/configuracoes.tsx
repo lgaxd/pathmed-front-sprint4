@@ -27,7 +27,7 @@ export function Configuracoes() {
         <>
             <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <Overlay visible={sidebarOpen} onClick={() => setSidebarOpen(false)} />
-            <Header onMenuClick={() => setSidebarOpen(true)} onLogout={handleLogout} />
+            <Header onMenuClick={() => setSidebarOpen(true)} />
             <ConfigContainer>
                 <ConfiguracoesHeader titulo="Configurações" />
 

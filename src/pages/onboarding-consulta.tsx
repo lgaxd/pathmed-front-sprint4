@@ -29,7 +29,7 @@ export function OnboardingConsulta() {
     <>
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Overlay visible={sidebarOpen} onClick={() => setSidebarOpen(false)} />
-      <Header onMenuClick={() => setSidebarOpen(true)} onLogout={handleLogout} />
+      <Header onMenuClick={() => setSidebarOpen(true)} />
       <OnboardingContainer>
         <OnboardingHeader
           nomePaciente="Nelson"
