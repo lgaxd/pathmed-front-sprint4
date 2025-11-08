@@ -91,22 +91,57 @@ function App() {
         <ErrorBoundary FallbackComponent={ErrorFallback}>
           <Suspense fallback={<Loading />}>
             <Routes>
-              <Route 
-                path="/login" 
-                element={!isAuthenticated ? <Login /> : <Navigate to="/" />} 
+              <Route
+                path="/login"
+                element={!isAuthenticated ? <Login /> : <Navigate to="/" />}
               />
-              <Route 
-                path="/" 
-                element={isAuthenticated ? <Home /> : <Navigate to="/login" />} 
+              <Route
+                path="/"
+                element={isAuthenticated ? <Home /> : <Navigate to="/login" />}
               />
-              <Route 
-                path="/onboarding-consulta" 
-                element={isAuthenticated ? <OnboardingConsulta /> : <Navigate to="/login" />} 
+              <Route
+                path="/onboarding-consulta"
+                element={isAuthenticated ? <OnboardingConsulta /> : <Navigate to="/login" />}
               />
-              {/* Proteger todas as outras rotas */}
-              <Route 
-                path="*" 
-                element={isAuthenticated ? <NotFound /> : <Navigate to="/login" />} 
+              {/* Criar as outras rotas */}
+
+              <Route
+                path="/teleconsulta"
+                element={isAuthenticated ? <TeleConsultaEncaminhamento /> : <Navigate to="/login" />}
+              />
+
+              <Route
+                path="/perfil"
+                element={isAuthenticated ? <Perfil /> : <Navigate to="/login" />}
+              />
+
+              <Route
+                path="/lembretes"
+                element={isAuthenticated ? <Lembretes /> : <Navigate to="/login" />}
+              />
+
+              <Route
+                path="/consultas"
+                element={isAuthenticated ? <Consultas /> : <Navigate to="/login" />}
+              />
+
+              <Route
+                path="/configuracoes"
+                element={isAuthenticated ? <Configuracoes /> : <Navigate to="/login" />}
+              />
+
+              <Route
+                path="/assistente-virtual"
+                element={isAuthenticated ? <AssistenteVirtual /> : <Navigate to="/login" />}
+              />
+
+              <Route
+                path="/desenvolvedores"
+                element={isAuthenticated ? <Desenvolvedores /> : <Navigate to="/login" />}
+              />
+              <Route
+                path="*"
+                element={isAuthenticated ? <NotFound /> : <Navigate to="/login" />}
               />
             </Routes>
           </Suspense>
