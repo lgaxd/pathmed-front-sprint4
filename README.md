@@ -42,7 +42,7 @@ Execute o comando "npm run dev" na pasta do projeto e acesse a página informada
 
 ## Demonstração em vídeo
 
-https://www.youtube.com/watch?v=IsVvpwQPZyg
+https://www.youtube.com/watch?v=YZphUeSE4bI
 
 ## Link do Repositório do Projeto
 
