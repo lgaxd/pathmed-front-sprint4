@@ -59,7 +59,13 @@ export function RenderAgendamentos() {
           // Buscar consultas específicas do paciente logado
           const consultasData = await apiService.getConsultasPorPaciente(userId);
           console.log('Consultas do paciente:', consultasData);
-          setConsultas(Array.isArray(consultasData) ? consultasData : [consultasData]);
+          
+          // Normalizar os dados das consultas para formato consistente
+          const consultasNormalizadas = Array.isArray(consultasData) 
+            ? consultasData.map(normalizarConsulta)
+            : [normalizarConsulta(consultasData)];
+            
+          setConsultas(consultasNormalizadas);
         } else {
           // Se não encontrar userId, não buscar consultas
           console.warn('ID do usuário não encontrado. Não será possível carregar consultas.');
@@ -77,6 +83,35 @@ export function RenderAgendamentos() {
 
     fetchConsultas();
   }, [apiService, user]); // Recarregar quando o usuário mudar
+
+  // Função para normalizar os dados da consulta (suporte a Java e Python)
+  const normalizarConsulta = (consulta: any) => {
+    // Verificar se é formato Python (snake_case) ou Java (camelCase)
+    const dataHora = consulta.data_hora_consulta || consulta.dataHoraConsulta;
+    const idConsulta = consulta.id_consulta || consulta.idConsulta;
+    const idPaciente = consulta.id_paciente || consulta.idPaciente;
+    const idProfissional = consulta.id_profissional || consulta.idProfissional;
+    const idStatus = consulta.id_status || consulta.idStatus;
+    
+    // Campos adicionais da API Python
+    const nomePaciente = consulta.nome_paciente;
+    const nomeProfissional = consulta.nome_profissional_saude;
+    const descricaoEspecialidade = consulta.descricao_especialidade;
+    const descricaoStatus = consulta.descricao_status;
+
+    return {
+      idConsulta,
+      idPaciente,
+      idProfissional,
+      idStatus,
+      dataHoraConsulta: dataHora,
+      // Campos da API Python (se disponíveis)
+      nomePaciente,
+      nomeProfissional,
+      descricaoEspecialidade,
+      descricaoStatus
+    };
+  };
 
   // Processar agendamentos quando os dados estiverem disponíveis
   useEffect(() => {
@@ -97,21 +132,43 @@ export function RenderAgendamentos() {
     const futurosAgendamentos: Agendamento[] = [];
 
     consultas.forEach(consulta => {
-      const profissional = profissionais.find(p => p.idProfissional === consulta.idProfissional);
-      const especialidade = especialidades.find(e => e.idEspecialidade === profissional?.idEspecialidade);
+      // Usar dados da API Python se disponíveis, caso contrário buscar nas listas
+      let nomeProfissional = consulta.nomeProfissional;
+      let especialidadeNome = consulta.descricaoEspecialidade;
 
+      // Se não vier da API Python, buscar nas listas
+      if (!nomeProfissional) {
+        const profissional = profissionais.find(p => p.idProfissional === consulta.idProfissional);
+        nomeProfissional = profissional?.nomeProfissionalSaude || "Médico não especificado";
+      }
+
+      if (!especialidadeNome) {
+        const profissional = profissionais.find(p => p.idProfissional === consulta.idProfissional);
+        const especialidade = especialidades.find(e => e.idEspecialidade === profissional?.idEspecialidade);
+        especialidadeNome = especialidade?.descricaoEspecialidade || "Especialidade não definida";
+      }
+
+      // Converter data/hora
       const dataHora = new Date(consulta.dataHoraConsulta);
+      
+      // Verificar se a data é válida
+      if (isNaN(dataHora.getTime())) {
+        console.warn('Data/hora inválida:', consulta.dataHoraConsulta);
+        return; // Pula para a próxima consulta
+      }
+
+      // Formatar data e horário
       const dataISO = dataHora.toISOString().split('T')[0];
       const horario = dataHora.toTimeString().split(' ')[0].substring(0, 5);
 
       const agendamento: Agendamento = {
         id: consulta.idConsulta.toString(),
         rghcPaciente: consulta.idPaciente.toString(),
-        especialidade: especialidade?.descricaoEspecialidade || "Especialidade não definida",
+        especialidade: especialidadeNome,
         data: dataISO,
         horario: horario,
         status: getStatusText(consulta.idStatus),
-        medicoNome: profissional?.nomeProfissionalSaude || "Médico não especificado"
+        medicoNome: nomeProfissional
       };
 
       const dataAgendamento = new Date(dataISO);
@@ -192,28 +249,4 @@ function getStatusText(statusId: number): "Agendado" | "Cancelado" | "Concluído
     case 5: return "Cancelado";
     default: return "Agendado";
   }
-}
-
-// Dados mock para desenvolvimento (apenas para fallback)
-function getMockConsultas() {
-  const hoje = new Date();
-  const amanha = new Date(hoje);
-  amanha.setDate(amanha.getDate() + 1);
-
-  return [
-    {
-      idConsulta: 1,
-      idPaciente: 1,
-      idProfissional: 1,
-      idStatus: 1,
-      dataHoraConsulta: hoje.toISOString()
-    },
-    {
-      idConsulta: 2,
-      idPaciente: 1,
-      idProfissional: 2,
-      idStatus: 1,
-      dataHoraConsulta: amanha.toISOString()
-    }
-  ];
 }

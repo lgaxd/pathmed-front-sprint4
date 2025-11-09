@@ -34,8 +34,46 @@ export function Agendamentos() {
   const [loading, setLoading] = useState(true);
   const [atualizando, setAtualizando] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   const apiService = useApiService();
+
+  const normalizarConsulta = (consulta: any): Consulta => {
+    const baseConsulta = {
+      idConsulta: consulta.id_consulta || consulta.idConsulta,
+      idPaciente: consulta.id_paciente || consulta.idPaciente,
+      idProfissional: consulta.id_profissional || consulta.idProfissional,
+      idStatus: consulta.id_status || consulta.idStatus,
+      dataHoraConsulta: consulta.data_hora_consulta || consulta.dataHoraConsulta
+    };
+
+    // Se a API Python já retornar os dados completos, usar eles
+    if (consulta.nome_paciente || consulta.nome_profissional_saude || consulta.descricao_especialidade) {
+      return {
+        ...baseConsulta,
+        nomePaciente: consulta.nome_paciente,
+        nomeProfissional: consulta.nome_profissional_saude,
+        especialidade: consulta.descricao_especialidade
+      };
+    }
+
+    return baseConsulta;
+  };
+
+  // Função para normalizar profissional
+  const normalizarProfissional = (profissional: any): Profissional => {
+    return {
+      idProfissional: profissional.id_profissional || profissional.idProfissional,
+      nomeProfissionalSaude: profissional.nome_profissional_saude || profissional.nomeProfissionalSaude
+    };
+  };
+
+  // Função para normalizar especialidade
+  const normalizarEspecialidade = (especialidade: any): Especialidade => {
+    return {
+      idEspecialidade: especialidade.id_especialidade || especialidade.idEspecialidade,
+      descricaoEspecialidade: especialidade.descricao_especialidade || especialidade.descricaoEspecialidade
+    };
+  };
 
   useEffect(() => {
     carregarDados();
@@ -45,28 +83,47 @@ export function Agendamentos() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const [consultasData, profissionaisData, especialidadesData] = await Promise.all([
         apiService.getConsultas(),
         apiService.getProfissionais(),
         apiService.getEspecialidades()
       ]);
 
-      // Enriquecer dados das consultas
+      // Normalizar dados
+      const consultasNormalizadas = Array.isArray(consultasData)
+        ? consultasData.map(normalizarConsulta)
+        : [normalizarConsulta(consultasData)];
+
+      const profissionaisNormalizados = Array.isArray(profissionaisData)
+        ? profissionaisData.map(normalizarProfissional)
+        : [normalizarProfissional(profissionaisData)];
+
+      const especialidadesNormalizadas = Array.isArray(especialidadesData)
+        ? especialidadesData.map(normalizarEspecialidade)
+        : [normalizarEspecialidade(especialidadesData)];
+
+      // Enriquecer dados das consultas (se necessário)
       const consultasEnriquecidas = await Promise.all(
-        consultasData.map(async (consulta: Consulta) => {
+        consultasNormalizadas.map(async (consulta: Consulta) => {
+          // Se já tiver dados completos da API Python, retornar como está
+          if (consulta.nomePaciente && consulta.nomeProfissional && consulta.especialidade) {
+            return consulta;
+          }
+
           try {
+            // Caso contrário, buscar dados adicionais
             const paciente = await apiService.getPacienteById(consulta.idPaciente);
-            const profissional = profissionaisData.find((p: Profissional) => p.idProfissional === consulta.idProfissional);
-            const especialidade = especialidadesData.find((e: Especialidade) => 
-              profissionaisData.find((p: Profissional) => p.idProfissional === consulta.idProfissional)?.idEspecialidade === e.idEspecialidade
-            );
+            const profissional = profissionaisNormalizados.find((p: Profissional) => p.idProfissional === consulta.idProfissional);
+
+            // Para especialidade, precisaríamos de uma lógica adicional para mapear profissional -> especialidade
+            const especialidade = "Especialidade a definir"; // Placeholder
 
             return {
               ...consulta,
               nomePaciente: paciente?.nomePaciente || 'Paciente não encontrado',
               nomeProfissional: profissional?.nomeProfissionalSaude || 'Profissional não encontrado',
-              especialidade: especialidade?.descricaoEspecialidade || 'Especialidade não definida'
+              especialidade: especialidade
             };
           } catch (error) {
             console.error(`Erro ao carregar dados da consulta ${consulta.idConsulta}:`, error);
@@ -81,20 +138,20 @@ export function Agendamentos() {
       );
 
       // Ordenar por data mais recente
-      consultasEnriquecidas.sort((a, b) => 
+      consultasEnriquecidas.sort((a, b) =>
         new Date(b.dataHoraConsulta).getTime() - new Date(a.dataHoraConsulta).getTime()
       );
 
       setConsultas(consultasEnriquecidas);
-      setProfissionais(profissionaisData);
-      setEspecialidades(especialidadesData);
+      setProfissionais(profissionaisNormalizados);
+      setEspecialidades(especialidadesNormalizadas);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       setError('Erro ao carregar agendamentos. Tente novamente.');
-      
+
       // Dados mock para desenvolvimento
       const mockConsultas = getMockConsultas();
-      mockConsultas.sort((a, b) => 
+      mockConsultas.sort((a, b) =>
         new Date(b.dataHoraConsulta).getTime() - new Date(a.dataHoraConsulta).getTime()
       );
       setConsultas(mockConsultas);
@@ -103,20 +160,21 @@ export function Agendamentos() {
     }
   };
 
+
   const atualizarStatusConsulta = async (consultaId: number, novoStatus: number) => {
     try {
       setAtualizando(consultaId);
       setError(null);
-      
+
       await apiService.updateConsultaStatus(consultaId, novoStatus);
-      
+
       // Atualizar localmente
-      setConsultas(prev => prev.map(consulta => 
-        consulta.idConsulta === consultaId 
+      setConsultas(prev => prev.map(consulta =>
+        consulta.idConsulta === consultaId
           ? { ...consulta, idStatus: novoStatus }
           : consulta
       ));
-      
+
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
       setError('Erro ao atualizar status da consulta.');
@@ -162,7 +220,7 @@ export function Agendamentos() {
 
   const getAcoesDisponiveis = (statusId: number) => {
     const acoes = [];
-    
+
     if (statusId === 1) {
       acoes.push({ label: 'Confirmar', status: 2, cor: 'green' });
       acoes.push({ label: 'Cancelar', status: 5, cor: 'red' });
@@ -175,7 +233,7 @@ export function Agendamentos() {
     } else if (statusId === 4 || statusId === 5 || statusId === 6) {
       acoes.push({ label: 'Reagendar', status: 1, cor: 'blue' });
     }
-    
+
     return acoes;
   };
 
@@ -195,7 +253,7 @@ export function Agendamentos() {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Overlay visible={sidebarOpen} onClick={() => setSidebarOpen(false)} />
       <Header onMenuClick={() => setSidebarOpen(true)} />
-      
+
       <main className="p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Gerenciar Agendamentos</h1>
@@ -236,7 +294,7 @@ export function Agendamentos() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {consultas.map((consulta) => {
                   const acoesDisponiveis = getAcoesDisponiveis(consulta.idStatus);
-                  
+
                   return (
                     <tr key={consulta.idConsulta} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">

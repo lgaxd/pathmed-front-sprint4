@@ -24,6 +24,19 @@ export function Pacientes() {
   const [pacienteEdit, setPacienteEdit] = useState<Paciente | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
+
+  const normalizarPaciente = (paciente: any): Paciente => {
+    return {
+      idPaciente: paciente.id_paciente || paciente.idPaciente,
+      identificadorRghc: paciente.identificador_rghc || paciente.identificadorRghc,
+      cpfPaciente: paciente.cpf_paciente || paciente.cpfPaciente,
+      nomePaciente: paciente.nome_paciente || paciente.nomePaciente,
+      dataNascimento: paciente.data_nascimento || paciente.dataNascimento,
+      tipoSanguineo: paciente.tipo_sanguineo || paciente.tipoSanguineo,
+      email: paciente.email_paciente || paciente.emailPaciente || paciente.email,
+      telefone: paciente.telefone_paciente || paciente.telefonePaciente || paciente.telefone
+    };
+  };
   
   const apiService = useApiService();
 
@@ -37,11 +50,19 @@ export function Pacientes() {
       setError(null);
       
       const pacientesData = await apiService.getPacientes();
+      console.log('Dados brutos dos pacientes:', pacientesData);
+      
+      // Normalizar os dados para formato consistente
+      const pacientesNormalizados = Array.isArray(pacientesData) 
+        ? pacientesData.map(normalizarPaciente)
+        : [normalizarPaciente(pacientesData)];
+      
       // Ordenar por nome
-      pacientesData.sort((a: Paciente, b: Paciente) => 
+      pacientesNormalizados.sort((a: Paciente, b: Paciente) => 
         a.nomePaciente.localeCompare(b.nomePaciente)
       );
-      setPacientes(pacientesData);
+      
+      setPacientes(pacientesNormalizados);
     } catch (error) {
       console.error('Erro ao carregar pacientes:', error);
       setError('Erro ao carregar pacientes. Tente novamente.');

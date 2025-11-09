@@ -27,6 +27,19 @@ export function Perfil() {
   const { user } = useAuth();
   const apiService = useApiService();
 
+  const normalizarPaciente = (pacienteData: any): Paciente => {
+    return {
+      idPaciente: pacienteData.id_paciente || pacienteData.idPaciente,
+      identificadorRghc: pacienteData.identificador_rghc || pacienteData.identificadorRghc,
+      cpfPaciente: pacienteData.cpf_paciente || pacienteData.cpfPaciente,
+      nomePaciente: pacienteData.nome_paciente || pacienteData.nomePaciente,
+      dataNascimento: pacienteData.data_nascimento || pacienteData.dataNascimento,
+      tipoSanguineo: pacienteData.tipo_sanguineo || pacienteData.tipoSanguineo,
+      email: pacienteData.email_paciente || pacienteData.emailPaciente || pacienteData.email,
+      telefone: pacienteData.telefone_paciente || pacienteData.telefonePaciente || pacienteData.telefone
+    };
+  };
+
   useEffect(() => {
     if (user?.idUsuario) {
       carregarDadosPaciente();
@@ -45,7 +58,10 @@ export function Perfil() {
       if (user?.tipoUsuario === 'PACIENTE') {
         // Buscar paciente pelo ID do usuário
         const pacienteData = await apiService.getPacienteById(user.idUsuario!);
-        setPaciente(pacienteData);
+        console.log('Dados brutos do paciente:', pacienteData);
+        
+        const pacienteNormalizado = normalizarPaciente(pacienteData);
+        setPaciente(pacienteNormalizado);
       } else {
         // Se for colaborador ou não tiver dados específicos, usar dados básicos do user
         setPaciente({

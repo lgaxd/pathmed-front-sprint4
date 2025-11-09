@@ -51,6 +51,32 @@ export function NovoAgendamento() {
   const apiService = useApiService();
   const navigate = useNavigate();
 
+  // Função para normalizar paciente
+  const normalizarPaciente = (paciente: any): Paciente => {
+    return {
+      idPaciente: paciente.id_paciente || paciente.idPaciente,
+      identificadorRghc: paciente.identificador_rghc || paciente.identificadorRghc,
+      nomePaciente: paciente.nome_paciente || paciente.nomePaciente
+    };
+  };
+
+  // Função para normalizar profissional
+  const normalizarProfissional = (profissional: any): Profissional => {
+    return {
+      idProfissional: profissional.id_profissional || profissional.idProfissional,
+      nomeProfissionalSaude: profissional.nome_profissional_saude || profissional.nomeProfissionalSaude,
+      idEspecialidade: profissional.id_especialidade || profissional.idEspecialidade
+    };
+  };
+
+  // Função para normalizar especialidade
+  const normalizarEspecialidade = (especialidade: any): Especialidade => {
+    return {
+      idEspecialidade: especialidade.id_especialidade || especialidade.idEspecialidade,
+      descricaoEspecialidade: especialidade.descricao_especialidade || especialidade.descricaoEspecialidade
+    };
+  };
+
   useEffect(() => {
     carregarDadosIniciais();
   }, []);
@@ -89,9 +115,22 @@ export function NovoAgendamento() {
         apiService.getEspecialidades()
       ]);
       
-      setPacientes(pacientesData);
-      setProfissionais(profissionaisData);
-      setEspecialidades(especialidadesData);
+      // Normalizar dados
+      const pacientesNormalizados = Array.isArray(pacientesData) 
+        ? pacientesData.map(normalizarPaciente)
+        : [normalizarPaciente(pacientesData)];
+
+      const profissionaisNormalizados = Array.isArray(profissionaisData)
+        ? profissionaisData.map(normalizarProfissional)
+        : [normalizarProfissional(profissionaisData)];
+
+      const especialidadesNormalizadas = Array.isArray(especialidadesData)
+        ? especialidadesData.map(normalizarEspecialidade)
+        : [normalizarEspecialidade(especialidadesData)];
+      
+      setPacientes(pacientesNormalizados);
+      setProfissionais(profissionaisNormalizados);
+      setEspecialidades(especialidadesNormalizadas);
     } catch (error) {
       console.error('Erro ao carregar dados iniciais:', error);
       setError('Erro ao carregar dados. Tente novamente.');
@@ -273,7 +312,10 @@ export function NovoAgendamento() {
             >
               <option value="">Selecione um paciente</option>
               {pacientes.map(paciente => (
-                <option key={paciente.idPaciente} value={paciente.idPaciente}>
+                <option 
+                  key={paciente.idPaciente} // ✅ ADICIONADO KEY ÚNICA
+                  value={paciente.idPaciente}
+                >
                   {paciente.nomePaciente} ({paciente.identificadorRghc})
                 </option>
               ))}
@@ -293,7 +335,10 @@ export function NovoAgendamento() {
             >
               <option value="">Selecione uma especialidade</option>
               {especialidades.map(esp => (
-                <option key={esp.idEspecialidade} value={esp.idEspecialidade}>
+                <option 
+                  key={esp.idEspecialidade} // ✅ ADICIONADO KEY ÚNICA
+                  value={esp.idEspecialidade}
+                >
                   {esp.descricaoEspecialidade}
                 </option>
               ))}
@@ -314,7 +359,10 @@ export function NovoAgendamento() {
               >
                 <option value="">Selecione um profissional</option>
                 {profissionaisFiltrados.map(prof => (
-                  <option key={prof.idProfissional} value={prof.idProfissional}>
+                  <option 
+                    key={prof.idProfissional} // ✅ ADICIONADO KEY ÚNICA
+                    value={prof.idProfissional}
+                  >
                     {prof.nomeProfissionalSaude}
                   </option>
                 ))}
@@ -344,7 +392,10 @@ export function NovoAgendamento() {
               >
                 <option value="">Selecione uma data</option>
                 {disponibilidade.map(disp => (
-                  <option key={disp.data} value={disp.data}>
+                  <option 
+                    key={disp.data} // ✅ ADICIONADO KEY ÚNICA
+                    value={disp.data}
+                  >
                     {new Date(disp.data).toLocaleDateString('pt-BR', { 
                       weekday: 'long',
                       year: 'numeric',
@@ -381,7 +432,10 @@ export function NovoAgendamento() {
                 {disponibilidade
                   .find(disp => disp.data === formData.data)
                   ?.horarios.map(horario => (
-                    <option key={horario} value={horario}>
+                    <option 
+                      key={horario} // ✅ ADICIONADO KEY ÚNICA
+                      value={horario}
+                    >
                       {horario}
                     </option>
                   ))}

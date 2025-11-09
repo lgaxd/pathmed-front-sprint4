@@ -15,7 +15,7 @@ export const ApiProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const apiBaseUrl = apiType === 'java' 
     ? 'https://pathmed.winty.cloud'
-    : 'http://localhost:8000/api/v1';
+    : 'https://pathmedapi.winty.cloud/api/v1';
 
   return (
     <ApiContext.Provider value={{ apiType, setApiType, apiBaseUrl }}>
