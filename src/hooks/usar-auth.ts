@@ -1,19 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useApiService } from './usar-api-service';
 
 interface UserData {
   idUsuario?: number;
   nomeUsuario?: string;
   tipoUsuario?: string;
   token?: string;
+  idPaciente?: number; // Adicionar ID do paciente se disponível
 }
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
-  const [userType, setUserType] = useState<'PACIENTE' | 'COLABORADOR' | null>(null); // Novo estado
+  const [userType, setUserType] = useState<'PACIENTE' | 'COLABORADOR' | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const apiService = useApiService();
 
   useEffect(() => {
     checkAuth();
@@ -67,7 +70,7 @@ export function useAuth() {
   return {
     isAuthenticated,
     user,
-    userType, // Exportar o tipo de usuário
+    userType,
     loading,
     login,
     logout,
