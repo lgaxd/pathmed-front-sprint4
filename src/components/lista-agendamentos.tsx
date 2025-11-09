@@ -91,7 +91,7 @@ export function ListaAgendamentos({ agendamentos, titulo }: ListaAgendamentosPro
                                             Iniciar consulta
                                         </Link>
                                     ) : (
-                                        <button className="flex justify-center w-full bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium">
+                                        <button className="flex justify-center w-full bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium cursor-pointer">
                                             Mais tarde...
                                         </button>
                                     )}

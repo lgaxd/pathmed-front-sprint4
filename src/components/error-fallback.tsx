@@ -12,13 +12,13 @@ export function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
         <div className="space-y-3">
           <button
             onClick={resetErrorBoundary}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
           >
             Tentar novamente
           </button>
           <button
             onClick={() => window.location.href = '/'}
-            className="w-full bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors"
+            className="w-full bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors cursor-pointer"
           >
             Voltar para Home
           </button>

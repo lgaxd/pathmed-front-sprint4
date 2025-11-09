@@ -72,7 +72,7 @@ class ApiService {
   }
 
   async getConsultasPorPaciente(pacienteId: number) {
-    return this.request(`/consultas/pacientes/${pacienteId}`);
+    return this.request(`/consultas/paciente/${pacienteId}`);
   }
 
   async createConsulta(consultaData: any) {

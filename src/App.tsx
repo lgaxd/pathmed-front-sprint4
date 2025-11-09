@@ -90,12 +90,20 @@ function App() {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    
+    // Polling para verificar autenticação a cada segundo (fallback)
+    const interval = setInterval(checkAuthentication, 1000);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    }
   }, []);
 
   const checkAuthentication = () => {
     const token = localStorage.getItem('userToken');
-    setIsAuthenticated(!!token);
+    const authenticated = !!token;
+    setIsAuthenticated(authenticated);
     setLoading(false);
   };
 
@@ -111,59 +119,51 @@ function App() {
             <Routes>
               <Route
                 path="/login"
-                element={!isAuthenticated ? <Login /> : <Navigate to="/" />}
+                element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />}
               />
               <Route
                 path="/"
-                element={isAuthenticated ? <Home /> : <Navigate to="/login" />}
+                element={isAuthenticated ? <Home /> : <Navigate to="/login" replace />}
               />
               <Route
                 path="/onboarding-consulta"
-                element={isAuthenticated ? <OnboardingConsulta /> : <Navigate to="/login" />}
+                element={isAuthenticated ? <OnboardingConsulta /> : <Navigate to="/login" replace />}
               />
-              {/* Criar as outras rotas */}
-
               <Route
                 path="/teleconsulta"
-                element={isAuthenticated ? <TeleConsultaEncaminhamento /> : <Navigate to="/login" />}
+                element={isAuthenticated ? <TeleConsultaEncaminhamento /> : <Navigate to="/login" replace />}
               />
-
               <Route
                 path="/perfil"
-                element={isAuthenticated ? <Perfil /> : <Navigate to="/login" />}
+                element={isAuthenticated ? <Perfil /> : <Navigate to="/login" replace />}
               />
-
               <Route
                 path="/lembretes"
-                element={isAuthenticated ? <Lembretes /> : <Navigate to="/login" />}
+                element={isAuthenticated ? <Lembretes /> : <Navigate to="/login" replace />}
               />
-
               <Route
                 path="/consultas"
-                element={isAuthenticated ? <Consultas /> : <Navigate to="/login" />}
+                element={isAuthenticated ? <Consultas /> : <Navigate to="/login" replace />}
               />
-
               <Route
                 path="/configuracoes"
-                element={isAuthenticated ? <Configuracoes /> : <Navigate to="/login" />}
+                element={isAuthenticated ? <Configuracoes /> : <Navigate to="/login" replace />}
               />
-
               <Route
                 path="/assistente-virtual"
-                element={isAuthenticated ? <AssistenteVirtual /> : <Navigate to="/login" />}
+                element={isAuthenticated ? <AssistenteVirtual /> : <Navigate to="/login" replace />}
               />
-
               <Route
                 path="/desenvolvedores"
-                element={isAuthenticated ? <Desenvolvedores /> : <Navigate to="/login" />}
+                element={isAuthenticated ? <Desenvolvedores /> : <Navigate to="/login" replace />}
               />
               <Route
                 path="*"
-                element={isAuthenticated ? <NotFound /> : <Navigate to="/login" />}
+                element={isAuthenticated ? <NotFound /> : <Navigate to="/login" replace />}
               />
               <Route
                 path="/agendar-consulta"
-                element={isAuthenticated ? <AgendarConsulta /> : <Navigate to="/login" />}
+                element={isAuthenticated ? <AgendarConsulta /> : <Navigate to="/login" replace />}
               />
             </Routes>
           </Suspense>

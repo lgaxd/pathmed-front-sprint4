@@ -6,36 +6,127 @@ import { useAuth } from "../hooks/usar-auth";
 
 export function RenderAgendamentos() {
   const [consultas, setConsultas] = useState<any[]>([]);
+  const [agendamentosHoje, setAgendamentosHoje] = useState<Agendamento[]>([]);
+  const [agendamentosFuturos, setAgendamentosFuturos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const apiService = useApiService();
   const { user } = useAuth();
 
+  // Buscar dados adicionais uma única vez
+  const [profissionais, setProfissionais] = useState<any[]>([]);
+  const [especialidades, setEspecialidades] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchDadosAdicionais = async () => {
+      try {
+        const [profissionaisData, especialidadesData] = await Promise.all([
+          apiService.getProfissionais(),
+          apiService.getEspecialidades()
+        ]);
+        setProfissionais(Array.isArray(profissionaisData) ? profissionaisData : []);
+        setEspecialidades(Array.isArray(especialidadesData) ? especialidadesData : []);
+      } catch (error) {
+        console.error('Error fetching additional data:', error);
+      }
+    };
+
+    fetchDadosAdicionais();
+  }, [apiService]);
+
   useEffect(() => {
     const fetchConsultas = async () => {
       try {
         setLoading(true);
-        // Se temos um usuário logado, buscar consultas específicas do paciente
-        if (user?.idUsuario) {
-          const consultasData = await apiService.getConsultasPorPaciente(user.idUsuario);
-          setConsultas(consultasData);
+        setError(null);
+        
+        // Obter o ID do usuário logado do localStorage ou do contexto de auth
+        const userToken = localStorage.getItem('userToken');
+        let userId: number | null = null;
+
+        if (userToken) {
+          try {
+            const userData = JSON.parse(userToken);
+            userId = userData.idUsuario || user?.idUsuario;
+          } catch (e) {
+            console.error('Error parsing user token:', e);
+          }
+        }
+
+        console.log('Buscando consultas para o usuário:', userId);
+
+        if (userId) {
+          // Buscar consultas específicas do paciente logado
+          const consultasData = await apiService.getConsultasPorPaciente(userId);
+          console.log('Consultas do paciente:', consultasData);
+          setConsultas(Array.isArray(consultasData) ? consultasData : [consultasData]);
         } else {
-          // Fallback: buscar todas as consultas
-          const consultasData = await apiService.getConsultas();
-          setConsultas(consultasData);
+          // Se não encontrar userId, não buscar consultas
+          console.warn('ID do usuário não encontrado. Não será possível carregar consultas.');
+          setConsultas([]);
+          setError('Usuário não identificado. Faça login novamente.');
         }
       } catch (err) {
         console.error('Error fetching consultations:', err);
-        // Dados mock para desenvolvimento
-        setConsultas(getMockConsultas());
-        setError('Erro ao carregar consultas. Mostrando dados de exemplo.');
+        setConsultas([]);
+        setError('Erro ao carregar consultas. Tente novamente mais tarde.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchConsultas();
-  }, [apiService, user]);
+  }, [apiService, user]); // Recarregar quando o usuário mudar
+
+  // Processar agendamentos quando os dados estiverem disponíveis
+  useEffect(() => {
+    if (consultas.length > 0 && profissionais.length > 0 && especialidades.length > 0) {
+      processarAgendamentos();
+    } else if (consultas.length === 0 && !loading) {
+      // Se não há consultas e não está carregando, limpar os agendamentos
+      setAgendamentosHoje([]);
+      setAgendamentosFuturos([]);
+    }
+  }, [consultas, profissionais, especialidades, loading]);
+
+  const processarAgendamentos = () => {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const hojeAgendamentos: Agendamento[] = [];
+    const futurosAgendamentos: Agendamento[] = [];
+
+    consultas.forEach(consulta => {
+      const profissional = profissionais.find(p => p.idProfissional === consulta.idProfissional);
+      const especialidade = especialidades.find(e => e.idEspecialidade === profissional?.idEspecialidade);
+
+      const dataHora = new Date(consulta.dataHoraConsulta);
+      const dataISO = dataHora.toISOString().split('T')[0];
+      const horario = dataHora.toTimeString().split(' ')[0].substring(0, 5);
+
+      const agendamento: Agendamento = {
+        id: consulta.idConsulta.toString(),
+        rghcPaciente: consulta.idPaciente.toString(),
+        especialidade: especialidade?.descricaoEspecialidade || "Especialidade não definida",
+        data: dataISO,
+        horario: horario,
+        status: getStatusText(consulta.idStatus),
+        medicoNome: profissional?.nomeProfissionalSaude || "Médico não especificado"
+      };
+
+      const dataAgendamento = new Date(dataISO);
+      dataAgendamento.setHours(0, 0, 0, 0);
+
+      if (dataAgendamento.getTime() === hoje.getTime()) {
+        hojeAgendamentos.push(agendamento);
+      } else if (dataAgendamento.getTime() > hoje.getTime()) {
+        futurosAgendamentos.push(agendamento);
+      }
+    });
+
+    setAgendamentosHoje(hojeAgendamentos);
+    setAgendamentosFuturos(futurosAgendamentos);
+  };
 
   if (loading) {
     return (
@@ -46,47 +137,6 @@ export function RenderAgendamentos() {
     );
   }
 
-  // Transformar dados da API para o formato do componente
-  const agendamentosHoje: Agendamento[] = consultas
-    .filter(consulta => {
-      try {
-        const consultaDate = new Date(consulta.dataHoraConsulta || consulta.data);
-        const hoje = new Date();
-        return consultaDate.toDateString() === hoje.toDateString();
-      } catch {
-        return false;
-      }
-    })
-    .map(consulta => ({
-      id: consulta.idConsulta?.toString() || consulta.id,
-      rghcPaciente: consulta.idPaciente?.toString() || user?.idUsuario?.toString() || "123456",
-      especialidade: consulta.especialidade || consulta.descricaoEspecialidade || "Consulta Geral",
-      data: consulta.dataHoraConsulta?.split('T')[0] || consulta.data,
-      horario: consulta.dataHoraConsulta?.split('T')[1]?.substring(0, 5) || consulta.horario || "09:00",
-      status: getStatusText(consulta.idStatus || consulta.status),
-      medicoNome: consulta.medicoNome || consulta.nomeProfissionalSaude || "Dr. Médico"
-    }));
-
-  const agendamentosFuturos: Agendamento[] = consultas
-    .filter(consulta => {
-      try {
-        const consultaDate = new Date(consulta.dataHoraConsulta || consulta.data);
-        const hoje = new Date();
-        return consultaDate > hoje && consultaDate.toDateString() !== hoje.toDateString();
-      } catch {
-        return false;
-      }
-    })
-    .map(consulta => ({
-      id: consulta.idConsulta?.toString() || consulta.id,
-      rghcPaciente: consulta.idPaciente?.toString() || user?.idUsuario?.toString() || "123456",
-      especialidade: consulta.especialidade || consulta.descricaoEspecialidade || "Consulta Geral",
-      data: consulta.dataHoraConsulta?.split('T')[0] || consulta.data,
-      horario: consulta.dataHoraConsulta?.split('T')[1]?.substring(0, 5) || consulta.horario || "09:00",
-      status: getStatusText(consulta.idStatus || consulta.status),
-      medicoNome: consulta.medicoNome || consulta.nomeProfissionalSaude || "Dr. Médico"
-    }));
-
   return (
     <div className="p-6">
       {error && (
@@ -94,16 +144,33 @@ export function RenderAgendamentos() {
           {error}
         </div>
       )}
+
+      {consultas.length === 0 && !error && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center mb-6">
+          <h3 className="text-lg font-semibold text-blue-800 mb-2">Nenhuma consulta agendada</h3>
+          <p className="text-blue-600">Você ainda não possui consultas agendadas.</p>
+          <button
+            onClick={() => window.location.href = '/agendar-consulta'}
+            className="mt-4 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg shadow cursor-pointer transition-colors duration-200"
+          >
+            Agendar Primeira Consulta
+          </button>
+        </div>
+      )}
       
-      <ListaAgendamentos 
-        agendamentos={agendamentosHoje} 
-        titulo="Hoje" 
-      />
+      {agendamentosHoje.length > 0 && (
+        <ListaAgendamentos 
+          agendamentos={agendamentosHoje} 
+          titulo="Hoje" 
+        />
+      )}
       
-      <ListaAgendamentos 
-        agendamentos={agendamentosFuturos} 
-        titulo="Próximos Dias" 
-      />
+      {agendamentosFuturos.length > 0 && (
+        <ListaAgendamentos 
+          agendamentos={agendamentosFuturos} 
+          titulo="Próximos Dias" 
+        />
+      )}
 
       {/* Botão para agendar nova consulta */}
       <div className="mt-8 text-center">
@@ -118,11 +185,7 @@ export function RenderAgendamentos() {
   );
 }
 
-function getStatusText(statusId: number | string): "Agendado" | "Cancelado" | "Concluído" {
-  if (typeof statusId === 'string') {
-    return statusId as "Agendado" | "Cancelado" | "Concluído";
-  }
-  
+function getStatusText(statusId: number): "Agendado" | "Cancelado" | "Concluído" {
   switch (statusId) {
     case 1: return "Agendado";
     case 4: return "Concluído";
@@ -131,24 +194,26 @@ function getStatusText(statusId: number | string): "Agendado" | "Cancelado" | "C
   }
 }
 
-// Dados mock para desenvolvimento
+// Dados mock para desenvolvimento (apenas para fallback)
 function getMockConsultas() {
+  const hoje = new Date();
+  const amanha = new Date(hoje);
+  amanha.setDate(amanha.getDate() + 1);
+
   return [
     {
       idConsulta: 1,
       idPaciente: 1,
-      dataHoraConsulta: new Date().toISOString(),
+      idProfissional: 1,
       idStatus: 1,
-      especialidade: "Cardiologia",
-      medicoNome: "Dr. Carlos Silva"
+      dataHoraConsulta: hoje.toISOString()
     },
     {
       idConsulta: 2,
       idPaciente: 1,
-      dataHoraConsulta: new Date(Date.now() + 86400000).toISOString(), // Amanhã
+      idProfissional: 2,
       idStatus: 1,
-      especialidade: "Dermatologia",
-      medicoNome: "Dra. Maria Santos"
+      dataHoraConsulta: amanha.toISOString()
     }
   ];
 }
