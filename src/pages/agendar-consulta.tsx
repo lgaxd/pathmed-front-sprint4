@@ -354,14 +354,14 @@ export function AgendarConsulta() {
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="flex-1 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition-colors cursor-pointer"
+              className="flex-1 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || !formData.horario}
-              className="flex-1 bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="flex-1 bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Agendando...' : 'Confirmar Agendamento'}
             </button>
