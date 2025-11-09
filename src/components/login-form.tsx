@@ -324,6 +324,7 @@ export function LoginForm() {
     const [erro, setErro] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [showRegistro, setShowRegistro] = useState(false);
+    const [isColaborador, setIsColaborador] = useState(false);
     const navigate = useNavigate();
     const apiService = useApiService();
 
@@ -340,24 +341,26 @@ export function LoginForm() {
             const credentials = {
                 usuario: usuario,
                 senha: password,
-                tipoUsuario: 'PACIENTE'
+                tipoUsuario: isColaborador ? 'COLABORADOR' : 'PACIENTE'
             };
 
             const response = await apiService.login(credentials);
             
             if (response.sucesso) {
-                // Salvar token/user info no localStorage
-                localStorage.setItem('userToken', JSON.stringify(response));
-                localStorage.setItem('userId', response.idUsuario?.toString() || '');
+                const userData = {
+                    ...response,
+                    tipoUsuario: isColaborador ? 'COLABORADOR' : 'PACIENTE'
+                };
                 
-                // Disparar evento de storage para atualizar o App.tsx
+                localStorage.setItem('userToken', JSON.stringify(userData));
+                localStorage.setItem('userId', response.idUsuario?.toString() || '');
+                localStorage.setItem('userType', isColaborador ? 'COLABORADOR' : 'PACIENTE');
+                
                 window.dispatchEvent(new Event('storage'));
                 
-                // Forçar uma atualização do estado de autenticação
                 setTimeout(() => {
-                    // Redirecionar para home após login bem-sucedido
-                    navigate("/", { replace: true });
-                    // Recarregar a página para garantir que todos os estados sejam resetados
+                    const redirectPath = isColaborador ? "/colaborador" : "/";
+                    navigate(redirectPath, { replace: true });
                     window.location.reload();
                 }, 100);
                 
@@ -376,8 +379,12 @@ export function LoginForm() {
         setShowRegistro(true);
     };
 
+    const handleToggleColaborador = () => {
+        setIsColaborador(!isColaborador);
+        setErro(null);
+    };
+
     const handleRegistroSuccess = () => {
-        // Limpar formulário de login após registro bem-sucedido
         setUsuario('');
         setPassword('');
         setErro(null);
@@ -395,6 +402,7 @@ export function LoginForm() {
         }
     }, [usuario, password]);
 
+    // RETURN DO JSX QUE ESTAVA FALTANDO
     return (
         <>
             <div className="font-primary flex flex-col items-center w-full px-6 mt-10">
@@ -402,11 +410,30 @@ export function LoginForm() {
                     Insira seus dados
                 </h1>
 
+                {/* Botão de alternância Colaborador/Paciente */}
+                <div className="w-full max-w-sm mb-6">
+                    <button
+                        onClick={handleToggleColaborador}
+                        className={`w-full py-3 px-4 rounded-lg font-medium transition-colors duration-200 cursor-pointer ${
+                            isColaborador 
+                                ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                    >
+                        {isColaborador ? '🔓 Sou Colaborador' : '👤 Sou Paciente'}
+                    </button>
+                    <p className="text-white text-sm text-center mt-2">
+                        {isColaborador 
+                            ? 'Acessando como funcionário do HC' 
+                            : 'Acessando como paciente'}
+                    </p>
+                </div>
+
                 {/* Campos do formulário */}
                 <div className="relative w-full max-w-sm mb-4">
                     <input
                         id="usuario"
-                        placeholder="Digite seu usuário"
+                        placeholder={isColaborador ? "Usuário corporativo" : "Digite seu usuário"}
                         value={usuario}
                         onChange={(e) => setUsuario(e.target.value)}
                         onKeyPress={handleKeyPress}
@@ -445,13 +472,15 @@ export function LoginForm() {
                     </button>
                 </div>
 
-                <button 
-                    className="text-sm text-white underline mb-6 cursor-pointer disabled:opacity-50 hover:text-blue-200 transition-colors"
-                    onClick={handleRegistrar}
-                    disabled={loading}
-                >
-                    Registrar usuário
-                </button>
+                {!isColaborador && (
+                    <button 
+                        className="text-sm text-white underline mb-6 cursor-pointer disabled:opacity-50 hover:text-blue-200 transition-colors"
+                        onClick={handleRegistrar}
+                        disabled={loading}
+                    >
+                        Registrar usuário
+                    </button>
+                )}
 
                 <button
                     className="w-full max-w-sm bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg shadow cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"

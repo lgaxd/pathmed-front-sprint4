@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/usar-auth';
 
 interface SidebarProps {
   open: boolean;
@@ -8,12 +9,17 @@ interface SidebarProps {
 interface MenuItem {
   label: string;
   path: string;
+  pacienteOnly?: boolean;
+  colaboradorOnly?: boolean;
 }
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const menuItems: MenuItem[] = [
+  const isColaborador = user?.tipoUsuario === 'COLABORADOR';
+
+  const menuItemsPaciente: MenuItem[] = [
     { label: "Painel principal", path: "/" },
     { label: "Agendar Consulta", path: "/agendar-consulta" },
     { label: "Lembretes", path: "/lembretes" },
@@ -22,6 +28,16 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { label: "Assistente virtual", path: "/assistente-virtual" },
     { label: "Configurações", path: "/configuracoes" },
   ];
+
+  const menuItemsColaborador: MenuItem[] = [
+    { label: "Painel do Colaborador", path: "/colaborador" },
+    { label: "Agendamentos", path: "/agendamentos" },
+    { label: "Pacientes", path: "/pacientes" },
+    { label: "Relatórios", path: "/relatorios" },
+    { label: "Configurações", path: "/configuracoes" },
+  ];
+
+  const menuItems = isColaborador ? menuItemsColaborador : menuItemsPaciente;
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -44,8 +60,17 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </button>
       </div>
 
+      {/* Indicador de tipo de usuário */}
+      <div className="px-6 mb-4">
+        <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+          isColaborador ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'
+        }`}>
+          {isColaborador ? '👨‍💼 Colaborador' : '👤 Paciente'}
+        </div>
+      </div>
+
       {/* Lista de itens */}
-      <nav className="mt-6 px-6 space-y-4 font-primary">
+      <nav className="mt-2 px-6 space-y-4 font-primary">
         <ul className="space-y-4">
           {menuItems.map((item, index) => (
             <li

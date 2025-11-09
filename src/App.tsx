@@ -77,8 +77,39 @@ const AgendarConsulta = lazy(() =>
   }))
 );
 
+const Colaborador = lazy(() =>
+  import("./pages/colaborador").then((module) => ({
+    default: module.Colaborador,
+  }))
+);
+
+const Agendamentos = lazy(() =>
+  import("./pages/agendamentos").then((module) => ({
+    default: module.Agendamentos,
+  }))
+);
+
+const Pacientes = lazy(() =>
+  import("./pages/pacientes").then((module) => ({
+    default: module.Pacientes,
+  }))
+);
+
+const NovoAgendamento = lazy(() =>
+  import("./pages/novo-agendamento").then((module) => ({
+    default: module.NovoAgendamento,
+  }))
+);
+
+const Relatorios = lazy(() =>
+  import("./pages/relatorios").then((module) => ({
+    default: module.Relatorios,
+  }))
+);
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userType, setUserType] = useState<'PACIENTE' | 'COLABORADOR' | null>(null) // Novo estado
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -90,10 +121,10 @@ function App() {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    
+
     // Polling para verificar autenticação a cada segundo (fallback)
     const interval = setInterval(checkAuthentication, 1000);
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
@@ -102,8 +133,10 @@ function App() {
 
   const checkAuthentication = () => {
     const token = localStorage.getItem('userToken');
+    const userType = localStorage.getItem('userType') as 'PACIENTE' | 'COLABORADOR' | null;
     const authenticated = !!token;
     setIsAuthenticated(authenticated);
+    setUserType(userType);
     setLoading(false);
   };
 
@@ -119,19 +152,23 @@ function App() {
             <Routes>
               <Route
                 path="/login"
-                element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />}
+                element={!isAuthenticated ? <Login /> : <Navigate to={userType === 'COLABORADOR' ? "/colaborador" : "/"} replace />}
               />
               <Route
                 path="/"
-                element={isAuthenticated ? <Home /> : <Navigate to="/login" replace />}
+                element={isAuthenticated && userType === 'PACIENTE' ? <Home /> : <Navigate to="/login" replace />}
               />
               <Route
                 path="/onboarding-consulta"
-                element={isAuthenticated ? <OnboardingConsulta /> : <Navigate to="/login" replace />}
+                element={isAuthenticated && userType === 'PACIENTE' ? <OnboardingConsulta /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/colaborador"
+                element={isAuthenticated && userType === 'COLABORADOR' ? <Colaborador /> : <Navigate to="/login" replace />}
               />
               <Route
                 path="/teleconsulta"
-                element={isAuthenticated ? <TeleConsultaEncaminhamento /> : <Navigate to="/login" replace />}
+                element={isAuthenticated && userType === 'PACIENTE' ? <TeleConsultaEncaminhamento /> : <Navigate to="/login" replace />}
               />
               <Route
                 path="/perfil"
@@ -164,6 +201,22 @@ function App() {
               <Route
                 path="/agendar-consulta"
                 element={isAuthenticated ? <AgendarConsulta /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/agendamentos"
+                element={isAuthenticated && userType === 'COLABORADOR' ? <Agendamentos /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/pacientes"
+                element={isAuthenticated && userType === 'COLABORADOR' ? <Pacientes /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/novo-agendamento"
+                element={isAuthenticated && userType === 'COLABORADOR' ? <NovoAgendamento /> : <Navigate to="/login" replace />}
+              />
+              <Route
+                path="/relatorios"
+                element={isAuthenticated && userType === 'COLABORADOR' ? <Relatorios /> : <Navigate to="/login" replace />}
               />
             </Routes>
           </Suspense>
