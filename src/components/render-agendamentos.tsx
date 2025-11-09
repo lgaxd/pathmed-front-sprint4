@@ -3,8 +3,10 @@ import type { Agendamento } from "../types/agendamento";
 import { useApiService } from "../hooks/usar-api-service";
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/usar-auth";
+import { useNavigate } from "react-router-dom";
 
 export function RenderAgendamentos() {
+  const navigate = useNavigate();
   const [consultas, setConsultas] = useState<any[]>([]);
   const [agendamentosHoje, setAgendamentosHoje] = useState<Agendamento[]>([]);
   const [agendamentosFuturos, setAgendamentosFuturos] = useState<Agendamento[]>([]);
@@ -207,7 +209,7 @@ export function RenderAgendamentos() {
           <h3 className="text-lg font-semibold text-blue-800 mb-2">Nenhuma consulta agendada</h3>
           <p className="text-blue-600">Você ainda não possui consultas agendadas.</p>
           <button
-            onClick={() => window.location.href = '/agendar-consulta'}
+            onClick={() => navigate('/agendar-consulta')}
             className="mt-4 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg shadow cursor-pointer transition-colors duration-200"
           >
             Agendar Primeira Consulta
@@ -232,7 +234,7 @@ export function RenderAgendamentos() {
       {/* Botão para agendar nova consulta */}
       <div className="mt-8 text-center">
         <button
-          onClick={() => window.location.href = '/agendar-consulta'}
+          onClick={() => navigate('/agendar-consulta')}
           className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow cursor-pointer transition-colors duration-200"
         >
           Agendar Nova Consulta
